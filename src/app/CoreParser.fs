@@ -91,4 +91,8 @@ let paren  p = gparen (char '(') (char ')') p
 let paren' p = paren (fun _ -> p)  
 
 let cparen  p = gparen (char '{') (char '}') p
-let cparen' p = cparen (fun _ -> p) 
+let cparen' p = cparen (fun _ -> p)
+
+let parseValue (p : 'a t) (s : string) : Option<'a> =
+  let results = p &s |> List.filter (fun x -> List.isEmpty (snd x)) |> List.map fst
+  if List.isEmpty results then None else Some (List.head results)

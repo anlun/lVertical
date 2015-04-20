@@ -56,5 +56,5 @@ module Parser =
       return! p() |> sp |> map (fun rightOp -> Seq (leftOp, rightOp))
     }
 
-  let rec parse _: t CoreParser.t =
-    seqP parse <|> term parse
+  let rec parse _: t CoreParser.t = (seqP parse <|> term parse) |> sp
+  let parser = parse ()
