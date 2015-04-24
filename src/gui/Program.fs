@@ -1,4 +1,4 @@
-﻿open Stmt.Parser
+open Stmt.Parser
 open CoreParser
 open Interpreter
 open System.Drawing
@@ -22,14 +22,38 @@ let programLabel =
 let mutable env     : string -> Option<int> = fun (s : string) -> None
 let mutable program : Option<Stmt.t> = None 
 
+type Queue = Null | Node of Option<Stmt.t> * Queue
+let mutable queue = Null
+
+let prevStepAction (but : Button) args =
+  match queue with 
+  | Null              -> but.Enabled <- false
+  | Node(value, next) ->
+    program <- value
+    queue   <- next
+    programLabel.Text <- sprintf "%A" program
+    if queue = Null then but.Enabled <- false
+
+let prevStepButton =
+  let but = new Button()
+  but.Text     <- "Previous Step"
+  but.Size     <- Size(85, 23)
+  but.Location <- System.Drawing.Point(programInput.Width - 2 * but.Width, programInput.Height)
+  but.Enabled  <- false
+  but.Click.Add (prevStepAction but)
+  but
+
 let nextStepAction (but : Button) args =
   match program with 
-  | None   -> but.Enabled <- false
+  | None   -> 
+    MessageBox.Show("You reached end of program") |> ignore
   | Some p ->
+    queue <- Node(program, queue)
     let (nenv, np) = ss env p
     env     <- nenv
     program <- np
     programLabel.Text <- sprintf "%A" program
+    prevStepButton.Enabled <- true
 
 let nextStepButton =
   let but = new Button()
@@ -47,18 +71,20 @@ let interpretAction args =
     nextStepButton.Enabled <- true
     programLabel.Text <- sprintf "%A" program
   with
-  | _ -> failwith "test"
+  | _ -> MessageBox.Show("Nothing to interpret") |> ignore
 
 let interpretButton =
   let but = new Button()
-  but.Text <- "Interpret"
+  but.Text     <- "Interpret"
   but.Location <- System.Drawing.Point(0, programInput.Height)
   but.MouseClick.Add interpretAction 
   but
 
 let mainForm =
   let form = new Form(Visible = false, TopMost = true)
+  form.Size <- Size(700, 370)
   form.Controls.Add(interpretButton)
+  form.Controls.Add(prevStepButton)
   form.Controls.Add(nextStepButton)
   form.Controls.Add(programInput)
   form.Controls.Add(programLabel)
