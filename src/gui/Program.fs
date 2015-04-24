@@ -19,17 +19,39 @@ let programLabel =
   lbl.AutoSize <- true
   lbl
 
-let mutable env     : string -> Option<int> = fun (s : string) -> None
-let mutable program : Option<Stmt.t> = None 
+let mutable env       : string -> Option<int> = fun (s : string) -> None
+let mutable program   : Option<Stmt.t> = None 
+let mutable prevSteps : List<Stmt.t> = []
+
+let prevStepAction (but : Button) args =
+  match prevSteps with
+  | [] -> but.Enabled <- false
+  | lastStep :: tail -> 
+    program <- Some lastStep
+    prevSteps <- tail
+    programLabel.Text <- sprintf "%A" program
+    if prevSteps = [] then but.Enabled <- false
+
+let prevStepButton =
+  let but = new Button()
+  but.Text     <- "Prev Step"
+  but.Location <- System.Drawing.Point(programInput.Width - 2 * but.Width, programInput.Height)
+  but.Enabled  <- false
+  but.Click.Add (prevStepAction but)
+  but
 
 let nextStepAction (but : Button) args =
   match program with 
-  | None   -> but.Enabled <- false
+  | None   -> 
+    but.Enabled <- false
+    prevStepButton.Enabled <- false
   | Some p ->
+    prevSteps <- p :: prevSteps
     let (nenv, np) = ss env p
     env     <- nenv
     program <- np
     programLabel.Text <- sprintf "%A" program
+    prevStepButton.Enabled <- true
 
 let nextStepButton =
   let but = new Button()
@@ -60,6 +82,7 @@ let mainForm =
   let form = new Form(Visible = false, TopMost = true)
   form.Controls.Add(interpretButton)
   form.Controls.Add(nextStepButton)
+  form.Controls.Add(prevStepButton)
   form.Controls.Add(programInput)
   form.Controls.Add(programLabel)
   form
