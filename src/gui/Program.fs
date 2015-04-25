@@ -22,17 +22,23 @@ let programLabel =
 let mutable env     : string -> Option<int> = fun (s : string) -> None
 let mutable program : Option<Stmt.t> = None 
 
-type Queue = Null | Node of Option<Stmt.t> * Queue
-let mutable queue = Null
+type Queue<'A> = Null | Node of 'A * Queue<'A>
+let mutable progQueue = Null
+let mutable envQueue  = Null
 
 let prevStepAction (but : Button) args =
-  match queue with 
-  | Null              -> but.Enabled <- false
-  | Node(value, next) ->
-    program <- value
-    queue   <- next
+  match progQueue with
+  | Null                  -> ()
+  | Node(value, nextProg) ->
+    program   <- Some value
+    progQueue <- nextProg
+    match envQueue with
+    | Null                  -> ()
+    | Node(value', nextEnv) -> 
+      env      <- value'
+      envQueue <- nextEnv
     programLabel.Text <- sprintf "%A" program
-    if queue = Null then but.Enabled <- false
+    if progQueue = Null then but.Enabled <- false
 
 let prevStepButton =
   let but = new Button()
@@ -45,10 +51,10 @@ let prevStepButton =
 
 let nextStepAction (but : Button) args =
   match program with 
-  | None   -> 
-    MessageBox.Show("You reached end of program") |> ignore
+  | None   -> MessageBox.Show("You reached end of program") |> ignore
   | Some p ->
-    queue <- Node(program, queue)
+    progQueue <- Node(p, progQueue)
+    envQueue  <- Node(env, envQueue)
     let (nenv, np) = ss env p
     env     <- nenv
     program <- np
