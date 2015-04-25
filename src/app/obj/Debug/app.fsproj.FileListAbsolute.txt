@@ -1,0 +1,7 @@
+C:\Users\Тюлень-Настя\Documents\GitHub\lVertical\src\app\bin\Debug\app.exe
+C:\Users\Тюлень-Настя\Documents\GitHub\lVertical\src\app\bin\Debug\app.pdb
+C:\Users\Тюлень-Настя\Documents\GitHub\lVertical\src\app\bin\Debug\FSharp.Core.dll
+C:\Users\Тюлень-Настя\Documents\GitHub\lVertical\src\app\bin\Debug\FSharp.Core.xml
+C:\Users\Тюлень-Настя\Documents\GitHub\lVertical\src\app\bin\Debug\ru\FSharp.Core.resources.dll
+C:\Users\Тюлень-Настя\Documents\GitHub\lVertical\src\app\obj\Debug\app.exe
+C:\Users\Тюлень-Настя\Documents\GitHub\lVertical\src\app\obj\Debug\app.pdb
