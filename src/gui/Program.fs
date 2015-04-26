@@ -1,4 +1,5 @@
-﻿open Stmt.Parser
+module Program_gui
+open Stmt.Parser
 open CoreParser
 open Interpreter
 open System.Drawing
@@ -18,24 +19,54 @@ let programLabel =
   lbl.Location <- System.Drawing.Point(programInput.Width, 0)
   lbl.AutoSize <- true
   lbl
-
+let mutable i = -1
 let mutable env     : string -> Option<int> = fun (s : string) -> None
-let mutable program : Option<Stmt.t> = None 
+let mutable program : Option<Stmt.t> = None  
+let mutable prev : Option<Stmt.t> = None
+let mutable arrProgram : Option<Stmt.t>[] = [||]
+let mutable arrPrev    : Option<Stmt.t>[] = [||]
+
+
+
+let prevStepAction (but : Button) args =
+  match i with 
+  | -1  -> but.Enabled <- false
+  | _ ->
+    program <- arrProgram.[i]
+    prev <- arrPrev.[i]
+    i <- i - 1
+    programLabel.Text <- sprintf "%A" program
+   
+let prevStepButton =
+  let but = new Button()
+  but.Text     <- "Prev Step"
+  but.Location <- System.Drawing.Point(programInput.Width - but.Width - but.Width, programInput.Height)
+  but.Enabled  <- false
+  but.Click.Add (prevStepAction but)
+  but
+
 
 let nextStepAction (but : Button) args =
   match program with 
   | None   -> but.Enabled <- false
   | Some p ->
+    prev <- program
     let (nenv, np) = ss env p
     env     <- nenv
     program <- np
+    arrProgram <- Array.append arrProgram [|program;|]
+    arrPrev <- Array.append arrPrev [|prev;|]
+    i <- i + 1
     programLabel.Text <- sprintf "%A" program
+
+  prevStepButton.Enabled <- true
 
 let nextStepButton =
   let but = new Button()
   but.Text     <- "Next Step"
   but.Location <- System.Drawing.Point(programInput.Width - but.Width, programInput.Height)
   but.Enabled  <- false
+  
   but.Click.Add (nextStepAction but)
   but
 
@@ -45,6 +76,9 @@ let interpretAction args =
     program <- parseResult |> List.head |> fst |> Some
     env <- (fun s -> None)
     nextStepButton.Enabled <- true
+    arrProgram <- Array.append arrProgram [|program;|]
+    arrPrev <- Array.append arrPrev [|prev;|]
+    i <- 0
     programLabel.Text <- sprintf "%A" program
   with
   | _ -> failwith "test"
@@ -58,8 +92,12 @@ let interpretButton =
 
 let mainForm =
   let form = new Form(Visible = false, TopMost = true)
+  form.Height <- 800
+  form.Width <- 800
+  form.FormBorderStyle <- FormBorderStyle.Fixed3D
   form.Controls.Add(interpretButton)
   form.Controls.Add(nextStepButton)
+  form.Controls.Add(prevStepButton)
   form.Controls.Add(programInput)
   form.Controls.Add(programLabel)
   form
