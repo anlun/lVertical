@@ -20,26 +20,17 @@ let programLabel =
   lbl.AutoSize <- true
   lbl
 
-let mutable env     : string -> Option<int> = fun (s : string) -> None
 let mutable program : Option<Stmt.t> = None 
 
-let mutable programAr : Option<Stmt.t>[] = [||]
-let mutable envAr     : (string -> Option<int>)[] = [||]
+let mutable programL : Stmt.t list = []
+let mutable envL     : (string -> Option<int>) list = []
 
-let mutable nextStEnabled = true
-//let mutable prevStEnabled = false
-let prevStepAction (but : Button) args =
-//  match program with 
-//  | None   -> but.Enabled <- false
-//  | Some p ->
-    program <- programAr.[programAr.Length - 1]
-    env     <- envAr.[envAr.Length - 1]
-    programAr <- programAr.[0 .. programAr.Length - 2]
-    envAr <- envAr.[0 .. envAr.Length - 2]
-    nextStEnabled <- true
-    if (programAr.Length = 0) then 
+let prevStepAction (but : Button)=
+    program <- Some programL.Head
+    programL <- programL.Tail
+    envL <- envL.Tail
+    if (programL.Length = 0) then 
       but.Enabled <- false
-    //  prevStVisible <- false
     programLabel.Text <- sprintf "%A" program
 
 let prevStepButton =
@@ -47,22 +38,19 @@ let prevStepButton =
   but.Text     <- "Prev Step"
   but.Location <- System.Drawing.Point(programInput.Width - 2 * but.Width, programInput.Height)
   but.Enabled  <- false
-  but.Click.Add (prevStepAction but)
+  but.Click.Add (fun e -> prevStepAction but)
+  but.Name <- "Prev"
   but
 
-let nextStepAction (but : Button) args =
+let nextStepAction (but : Button) =
   match program with 
-  | None   -> 
-    but.Enabled <- false
-    nextStEnabled <- false
+  | None   -> MessageBox.Show("The program has ended") |> ignore
   | Some p ->
-
     prevStepButton.Enabled <- true
-    programAr <- Array.append programAr [|program|]
-    envAr <- Array.append envAr [|env|]
+    programL <- p :: programL
 
-    let (nenv, np) = ss env p
-    env     <- nenv
+    let (nenv, np) = ss envL.Head p
+    envL     <- nenv :: envL
     program <- np
     programLabel.Text <- sprintf "%A" program
 
@@ -71,22 +59,16 @@ let nextStepButton =
   but.Text     <- "Next Step"
   but.Location <- System.Drawing.Point(programInput.Width - but.Width, programInput.Height)
   but.Enabled  <- false
-  nextStEnabled <- false
-  but.Click.Add (nextStepAction but)
+  but.Click.Add (fun e -> nextStepAction but)
   but
 
 let interpretAction args =
   let parseResult = &programInput.Text |> parse ()
-  try
-    program <- parseResult |> List.head |> fst |> Some
-    env <- (fun s -> None)
+  nextStepButton.Enabled <- true
+  program <- parseResult |> List.head |> fst |> Some
+  envL <- [(fun s -> None)]
 
-    nextStepButton.Enabled <- true
-    nextStEnabled <- true
-
-    programLabel.Text <- sprintf "%A" program
-  with
-  | _ -> failwith "test"
+  programLabel.Text <- sprintf "%A" program
 
 let interpretButton =
   let but = new Button()
@@ -102,10 +84,6 @@ let mainForm =
   form.Controls.Add(prevStepButton)
   form.Controls.Add(programInput)
   form.Controls.Add(programLabel)
-  form.MouseMove.Add (fun e ->
- //   prevStepButton.Visible <- prevStVisible
-    nextStepButton.Enabled <- nextStEnabled
-  )
   form
 
 [<EntryPoint>]
