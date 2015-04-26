@@ -1,4 +1,5 @@
-﻿open Stmt.Parser
+﻿module GUI
+open Stmt.Parser
 open CoreParser
 open Interpreter
 open System.Drawing
@@ -19,15 +20,37 @@ let programLabel =
   lbl.AutoSize <- true
   lbl
 
-let mutable env     : string -> Option<int> = fun (s : string) -> None
 let mutable program : Option<Stmt.t> = None 
 
-let nextStepAction (but : Button) args =
+let mutable programL : Stmt.t list = []
+let mutable envL     : (string -> Option<int>) list = []
+
+let prevStepAction (but : Button)=
+    program <- Some programL.Head
+    programL <- programL.Tail
+    envL <- envL.Tail
+    if (programL.Length = 0) then 
+      but.Enabled <- false
+    programLabel.Text <- sprintf "%A" program
+
+let prevStepButton =
+  let but = new Button()
+  but.Text     <- "Prev Step"
+  but.Location <- System.Drawing.Point(programInput.Width - 2 * but.Width, programInput.Height)
+  but.Enabled  <- false
+  but.Click.Add (fun e -> prevStepAction but)
+  but.Name <- "Prev"
+  but
+
+let nextStepAction (but : Button) =
   match program with 
-  | None   -> but.Enabled <- false
+  | None   -> MessageBox.Show("The program has ended") |> ignore
   | Some p ->
-    let (nenv, np) = ss env p
-    env     <- nenv
+    prevStepButton.Enabled <- true
+    programL <- p :: programL
+
+    let (nenv, np) = ss envL.Head p
+    envL     <- nenv :: envL
     program <- np
     programLabel.Text <- sprintf "%A" program
 
@@ -36,18 +59,16 @@ let nextStepButton =
   but.Text     <- "Next Step"
   but.Location <- System.Drawing.Point(programInput.Width - but.Width, programInput.Height)
   but.Enabled  <- false
-  but.Click.Add (nextStepAction but)
+  but.Click.Add (fun e -> nextStepAction but)
   but
 
 let interpretAction args =
   let parseResult = &programInput.Text |> parse ()
-  try
-    program <- parseResult |> List.head |> fst |> Some
-    env <- (fun s -> None)
-    nextStepButton.Enabled <- true
-    programLabel.Text <- sprintf "%A" program
-  with
-  | _ -> failwith "test"
+  nextStepButton.Enabled <- true
+  program <- parseResult |> List.head |> fst |> Some
+  envL <- [(fun s -> None)]
+
+  programLabel.Text <- sprintf "%A" program
 
 let interpretButton =
   let but = new Button()
@@ -60,6 +81,7 @@ let mainForm =
   let form = new Form(Visible = false, TopMost = true)
   form.Controls.Add(interpretButton)
   form.Controls.Add(nextStepButton)
+  form.Controls.Add(prevStepButton)
   form.Controls.Add(programInput)
   form.Controls.Add(programLabel)
   form

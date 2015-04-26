@@ -1,4 +1,4 @@
-#!tools/FAKE/tools/FAKE.exe
+//#!tools/FAKE/tools/FAKE.exe
 #r @"tools/FAKE/tools/FakeLib.dll"
 open Fake
 

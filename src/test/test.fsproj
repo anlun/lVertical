@@ -19,7 +19,20 @@
     <ErrorReport>prompt</ErrorReport>
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="ExprTest.fs" />
+    <Compile Include="VerticalPrinterTest.fs" />
+    <None Include="packages.config" />
+    <Compile Include="PrevStepTest.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\gui\gui.fsproj">
+      <Name>gui</Name>
+      <Project>{e66bcbf0-e624-4684-a799-16b0811cbff4}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core" />
     <Reference Include="System" />
@@ -28,20 +41,10 @@
     <Reference Include="nunit.framework">
       <HintPath>..\..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="ExprTest.fs" />
-    <Compile Include="VerticalPrinterTest.fs" />
-  </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets" />
-  <ItemGroup>
     <ProjectReference Include="..\app\app.fsproj">
       <Project>{4C17BF65-9F5A-45B8-8CFB-84F874B6DA81}</Project>
       <Name>app</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
+    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
 </Project>
