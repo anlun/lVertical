@@ -23,8 +23,8 @@ let mutable i = -1
 let mutable env     : string -> Option<int> = fun (s : string) -> None
 let mutable program : Option<Stmt.t> = None  
 let mutable prev : Option<Stmt.t> = None
-let mutable arrProgram : Option<Stmt.t>[] = [||]
-let mutable arrPrev    : Option<Stmt.t>[] = [||]
+let mutable lsProgram : List<Option<Stmt.t>> = []
+let mutable lsPrev    : List<Option<Stmt.t>> = []
 
 
 
@@ -32,8 +32,8 @@ let prevStepAction (but : Button) args =
   match i with 
   | -1  -> but.Enabled <- false
   | _ ->
-    program <- arrProgram.[i]
-    prev <- arrPrev.[i]
+    program <- lsProgram.[i]
+    prev <- lsPrev.[i]
     i <- i - 1
     programLabel.Text <- sprintf "%A" program
    
@@ -50,12 +50,12 @@ let nextStepAction (but : Button) args =
   match program with 
   | None   -> but.Enabled <- false
   | Some p ->
-    prev <- program
+    
     let (nenv, np) = ss env p
     env     <- nenv
     program <- np
-    arrProgram <- Array.append arrProgram [|program;|]
-    arrPrev <- Array.append arrPrev [|prev;|]
+    lsProgram <- List.append lsProgram [program;]
+    lsPrev <- List.append lsPrev [Some p;]
     i <- i + 1
     programLabel.Text <- sprintf "%A" program
 
@@ -76,8 +76,8 @@ let interpretAction args =
     program <- parseResult |> List.head |> fst |> Some
     env <- (fun s -> None)
     nextStepButton.Enabled <- true
-    arrProgram <- Array.append arrProgram [|program;|]
-    arrPrev <- Array.append arrPrev [|prev;|]
+    lsProgram <- List.append lsProgram [program;]
+    lsPrev <- List.append lsPrev [prev;]
     i <- 0
     programLabel.Text <- sprintf "%A" program
   with
