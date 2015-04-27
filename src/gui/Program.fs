@@ -21,16 +21,20 @@ let programLabel =
 
 let mutable env     : string -> Option<int> = fun (s : string) -> None
 let mutable program : Option<Stmt.t> = None 
-
-let mutable list: Option<Stmt.t> list = []
+let mutable pp: Stmt.t list = []
+let mutable penv: (string -> Option<int>) list = []
 
 let prevStepAction (but : Button) args =
-  match list with
+  match pp with
   |[] -> but.Enabled <- false
-  |a :: b -> program <- a 
-             list <- b 
-             if list = [] then 
-               but.Enabled <- false    
+  |a :: b -> program <- Some a 
+             pp <- b 
+             if pp = [] then 
+               but.Enabled <- false   
+             match penv with
+             |[] -> ()
+             |x :: y -> env <- x
+                        penv <- y
   programLabel.Text <- sprintf "%A" program     
 
 let prevStepButton =
@@ -46,7 +50,8 @@ let nextStepAction (but : Button) args =
   | None   -> but.Enabled <- false
   | Some p ->
     let (nenv, np) = ss env p
-    list <- program :: list
+    pp <- program.Value :: pp
+    penv <- env :: penv
     env     <- nenv
     program <- np
     programLabel.Text <- sprintf "%A" program
