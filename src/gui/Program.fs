@@ -19,13 +19,17 @@ let programLabel =
   lbl.AutoSize <- true
   lbl
 
-let mutable env     : string -> Option<int> = fun (s : string) -> None
-let mutable program : Option<Stmt.t> = None 
+let mutable env       : string -> Option<int> = fun (s : string) -> None
+let mutable prevEnv   : List<string -> Option<int>> = []
+let mutable program   : Option<Stmt.t> = None 
+let mutable prevProgr : List<Stmt.t> = []
 
 let nextStepAction (but : Button) args =
   match program with 
   | None   -> but.Enabled <- false
   | Some p ->
+    prevProgr <- p :: prevProgr
+    prevEnv <- env :: prevEnv
     let (nenv, np) = ss env p
     env     <- nenv
     program <- np
@@ -39,12 +43,32 @@ let nextStepButton =
   but.Click.Add (nextStepAction but)
   but
 
+let prevStepAction (but : Button) args =
+  match prevProgr with
+  | [] -> MessageBox.Show("There is no previous steps") |> ignore
+  | lastStep :: tail -> 
+    program <- Some lastStep
+    env <- prevEnv.Head
+    prevProgr <- tail
+    prevEnv <- prevEnv.Tail
+    programLabel.Text <- sprintf "%A" program
+    nextStepButton.Enabled <- true
+
+let prevStepButton =
+  let but = new Button()
+  but.Text     <- "Prev Step"
+  but.Location <- System.Drawing.Point(programInput.Width - 2 * but.Width, programInput.Height)
+  but.Enabled  <- false
+  but.Click.Add (prevStepAction but)
+  but
+
 let interpretAction args =
   let parseResult = &programInput.Text |> parse ()
   try
     program <- parseResult |> List.head |> fst |> Some
     env <- (fun s -> None)
     nextStepButton.Enabled <- true
+    prevStepButton.Enabled <- true
     programLabel.Text <- sprintf "%A" program
   with
   | _ -> failwith "test"
@@ -60,6 +84,7 @@ let mainForm =
   let form = new Form(Visible = false, TopMost = true)
   form.Controls.Add(interpretButton)
   form.Controls.Add(nextStepButton)
+  form.Controls.Add(prevStepButton)
   form.Controls.Add(programInput)
   form.Controls.Add(programLabel)
   form
