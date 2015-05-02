@@ -19,7 +19,7 @@ let programLabel =
   lbl.Location <- System.Drawing.Point(programInput.Width, 0)
   lbl.AutoSize <- true
   lbl
-let mutable i = -1
+let mutable state = -1 // определяет состояние программы и предыдущий шаг
 let mutable env     : string -> Option<int> = fun (s : string) -> None
 let mutable program : Option<Stmt.t> = None  
 let mutable prev : Option<Stmt.t> = None
