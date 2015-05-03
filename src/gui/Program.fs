@@ -21,7 +21,8 @@ let programLabel =
 
 let mutable env     : string -> Option<int> = fun (s : string) -> None
 let mutable program : Option<Stmt.t> = None 
-let mutable list : Option<Stmt.t> list = []
+let mutable progMemory : Stmt.t list = []
+let mutable envMenory : List<string -> Option<int>> = []
 
 let nextStepAction (but : Button) args =
   match program with 
@@ -30,9 +31,10 @@ let nextStepAction (but : Button) args =
     let (nenv, np) = ss env p
     env     <- nenv
     program <- np
-    programLabel.Text <- sprintf "%A" program 
+    programLabel.Text <- sprintf "%A" program
+    envMenory <- env :: envMenory
     if program <> None then 
-      list <- program::list
+      progMemory <- program.Value::progMemory
     
 let nextStepButton =
   let but = new Button()
@@ -44,13 +46,14 @@ let nextStepButton =
 
   
 let prevStepAction (but : Button) args =
-  match list.IsEmpty with 
+  match progMemory.IsEmpty with 
   | true   -> but.Enabled <- false
   | false ->
-    program <- list.Head
-    programLabel.Text <- sprintf "%A" list.Head 
-    if not list.Tail.IsEmpty then 
-      list <- list.Tail
+    program <- Some progMemory.Head
+    env <- envMenory.Head
+    programLabel.Text <- sprintf "%A" progMemory.Head 
+    if not progMemory.Tail.IsEmpty then 
+      progMemory <- progMemory.Tail
     nextStepButton.Enabled <- true
 
 let prevStepButton =
@@ -68,9 +71,11 @@ let interpretAction args =
     env <- (fun s -> None)
     nextStepButton.Enabled <- true
     prevStepButton.Enabled <- true
-    programLabel.Text <- sprintf "%A" program
-    list <- []
-    list <- program::list
+    programLabel.Text <- sprintf "%A" program.Value
+    progMemory <- []
+    envMenory <- []
+    progMemory <- program.Value::progMemory
+    envMenory <- env::envMenory
   with
   | _ -> failwith "test"
 
