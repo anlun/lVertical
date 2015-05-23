@@ -1,4 +1,4 @@
-﻿open Stmt.Parser
+open Stmt.Parser
 open CoreParser
 open Interpreter
 open System.Drawing
@@ -20,14 +20,33 @@ let programLabel =
   lbl
 
 let mutable env     : string -> Option<int> = fun (s : string) -> None
-let mutable program : Option<Stmt.t> = None 
+let mutable penv: (string -> Option<int>) list = []
+let mutable program : Option<Stmt.t> = None
+let mutable pp : Stmt.t list = []
+
+let prevStepAction (but : Button)=
+  program <- Some pp.Head
+  pp <- pp.Tail
+  penv <- penv.Tail
+  if (pp.Length = 0) then but.Enabled <- false
+  programLabel.Text <- sprintf "%A" program
+
+let prevStepButton =
+  let but = new Button()
+  but.Text     <- "Prev Step"
+  but.Location <- System.Drawing.Point(programInput.Width - 2 * but.Width, programInput.Height)
+  but.Enabled  <- false
+  but.Click.Add (fun e -> prevStepAction but)
+  but
 
 let nextStepAction (but : Button) args =
   match program with 
   | None   -> but.Enabled <- false
   | Some p ->
-    let (nenv, np) = ss env p
-    env     <- nenv
+    prevStepButton.Enabled <- true
+    pp <- p :: pp
+    let (nenv, np) = ss penv.Head p
+    penv <- nenv :: penv
     program <- np
     programLabel.Text <- sprintf "%A" program
 
@@ -43,7 +62,7 @@ let interpretAction args =
   let parseResult = &programInput.Text |> parse ()
   try
     program <- parseResult |> List.head |> fst |> Some
-    env <- (fun s -> None)
+    penv <- [(fun s -> None)]
     nextStepButton.Enabled <- true
     programLabel.Text <- sprintf "%A" program
   with
@@ -58,8 +77,10 @@ let interpretButton =
 
 let mainForm =
   let form = new Form(Visible = false, TopMost = true)
+  form.Size <- Size(600, 400)
   form.Controls.Add(interpretButton)
   form.Controls.Add(nextStepButton)
+  form.Controls.Add(prevStepButton)
   form.Controls.Add(programInput)
   form.Controls.Add(programLabel)
   form
