@@ -21,6 +21,26 @@ let programLabel =
 
 let mutable env     : string -> Option<int> = fun (s : string) -> None
 let mutable program : Option<Stmt.t> = None 
+let mutable prevenv : List<string -> Option<int>> = []
+let mutable prevprogram : List<Stmt.t> = []
+
+let prevStepAction (but : Button) args =
+  match prevprogram with 
+  | []   -> but.Enabled <- false
+  | laststep :: tail ->
+    program <- Some laststep
+    env <- prevenv.Head
+    prevprogram <- tail
+    prevenv <- prevenv.Tail
+    programLabel.Text <- sprintf "%A" program
+
+let prevStepButton =
+  let but = new Button()
+  but.Text     <- "Prev Step"
+  but.Location <- System.Drawing.Point(programInput.Width - 2*but.Width , programInput.Height)
+  but.Enabled  <- false
+  but.Click.Add (prevStepAction but)
+  but
 
 let nextStepAction (but : Button) args =
   match program with 
@@ -29,7 +49,10 @@ let nextStepAction (but : Button) args =
     let (nenv, np) = ss env p
     env     <- nenv
     program <- np
-    programLabel.Text <- sprintf "%A" program
+    prevprogram <- p::prevprogram
+    prevenv <- env::prevenv
+    prevStepButton.Enabled <- true
+    programLabel.Text <- sprintf "%A" program 
 
 let nextStepButton =
   let but = new Button()
@@ -62,6 +85,7 @@ let mainForm =
   form.Controls.Add(nextStepButton)
   form.Controls.Add(programInput)
   form.Controls.Add(programLabel)
+  form.Controls.Add(prevStepButton)
   form
 
 [<EntryPoint>]
