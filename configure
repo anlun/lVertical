@@ -5,5 +5,5 @@ chmod +x NuGet.exe
 echo "Downloading FAKE..."
 mono NuGet.exe Install FAKE -OutputDirectory tools -ExcludeVersion
 chmod +x tools/FAKE/tools/FAKE.exe
-echo "Downloading NUnit.Runners..."
-mono NuGet.exe Install NUnit.Runners -OutputDirectory packages -ExcludeVersion
+# echo "Downloading NUnit.Runners..."
+# mono NuGet.exe Install NUnit.Runners -OutputDirectory packages -ExcludeVersion

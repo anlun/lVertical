@@ -37,12 +37,12 @@ let rec bs (env: string -> int option) (op: Stmt.t) =
                        | Some _ -> let nenv = bs env body
                                    bs nenv op
 
-let rec ss (env: string -> int option) (op: Stmt.t) =
+let rec ss_prime writeOp (env: string -> int option) (op: Stmt.t) =
   match op with 
   | Read v  -> readS env v, None
-  | Write e -> writeS env e, None
+  | Write e -> writeOp e, None  
   | Assign (v, e) -> assignS env v e, None
-  | Seq (op1, op2) -> let (nenv, nop1) = ss env op1
+  | Seq (op1, op2) -> let (nenv, nop1) = ss_prime writeOp env op1
                       match nop1 with
                       | None -> nenv, Some op2
                       | Some op -> nenv, Some (Seq (op, op2))
@@ -54,3 +54,6 @@ let rec ss (env: string -> int option) (op: Stmt.t) =
                        | None -> raise UndefinedValues
                        | Some 0 -> env, None
                        | Some _ -> env, Some (Seq (body, op))
+let ss env op =
+  let writeOp = writeS env
+  ss_prime writeOp env op
